@@ -5,8 +5,12 @@ module.exports = function(){
 function _Salsa20(){    
     var self = this;
 
+    var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574],
+        rounds = 12;
+
     function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
-    function wordSpecification(ina){
+    function coreFunc(ina){
+        // Salsa20 Core Word Specification
         var i, ret = new Uint32Array(16);
         var x = new Uint32Array(16);
         for (i=0; i<16; ++i) x[i] = ina[i];
@@ -34,13 +38,33 @@ function _Salsa20(){
 
     //////////////////////////////////////////////////////////////////////
 
-    var key = new Uint32Array(),
+    var key = new Uint32Array(8),
         nonce = new Uint32Array(2),
         counter = new Uint32Array(2),
         blockUsed = 64,
         block = [];
 
-    function _salsa20(key, nonce, counter){
+    function _salsa20Block(){
+        var input = new Uint32Array(16);
+
+        input.buffer[0] = sigma[0];
+        input.buffer[1] = key[0];
+        input.buffer[2] = key[1];
+        input.buffer[3] = key[2];
+        input.buffer[4] = key[3];
+        input.buffer[5] = sigma[1];
+        input.buffer[6] = nonce[0];
+        input.buffer[7] = nonce[1];
+        input.buffer[8] = counter[0];
+        input.buffer[9] = counter[1];
+        input.buffer[10] = sigma[2];
+        input.buffer[11] = key[4];
+        input.buffer[12] = key[5];
+        input.buffer[13] = key[6];
+        input.buffer[14] = key[7];
+        input.buffer[15] = sigma[3];
+
+        var block = coreFunc(input);
         
     };
 
@@ -59,10 +83,20 @@ function _Salsa20(){
 
     this.key = function(bufKey){
         // buffer typed bufKey, first 32 bytes will be used.
+        if(bufKey.length < 32) throw new Error('invalid-key');
+        for(var i=0; i<8; i++)
+            key[i] = bufKey.readUInt32LE(i);
+        self.encrypt = encrypt;
+        self.decrypt = decrypt;
+        delete self.key;
+        return self;
+    };
 
+    function encrypt(dataBuf){
+    };
+
+    function decrypt(dataBuf){
     };
 
     return this;
 };
-
-new _Salsa20();
