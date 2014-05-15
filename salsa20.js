@@ -2,12 +2,12 @@ module.exports = function(){
     return new _Salsa20();
 };
 
-function _Salsa20(){    
+function _Salsa20(rounds){    
     var self = this;
     var __buffer = require('buffer');
+    if(!rounds || rounds < 12) rounds = 12;
 
-    var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574],
-        rounds = 20;
+    var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
 
     function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
     function coreFunc(ina){
@@ -41,7 +41,7 @@ function _Salsa20(){
         var retArray = new Array(64);
         for(i=0; i<64; i++) retArray[i] = ret.buffer[i];
 
-        return new __buffer.Buffer(retArray);;
+        return retArray;
     };
 
     //////////////////////////////////////////////////////////////////////
@@ -89,10 +89,9 @@ function _Salsa20(){
             nonce[i] = bufKey.readUInt32LE(i);
         for(var i=2; i<10; i++)
             key[i] = bufKey.readUInt32LE(i);
-        self.encrypt = encrypt;
-        self.decrypt = decrypt;
+        self.encrypt = _xorBuf;
+        self.decrypt = _xorBuf;
         delete self.key;
-        console.log(_getStream(1).toString('hex'));
         return self;
     };
 
@@ -100,16 +99,19 @@ function _Salsa20(){
         _counterReset();
         var blocks = [], block, blockBuf, i, j;
         for(i=0; i<blockCount; i++){
-            blocks.push(_salsa20Block());
+            blocks = blocks.concat(_salsa20Block());
             _counterInc();
         };
-        return __buffer.Buffer.concat(blocks);
+        return blocks;
     };
 
-    function encrypt(dataBuf){
-    };
-
-    function decrypt(dataBuf){
+    function _xorBuf(dataBuf){
+        var stream = _getStream(Math.ceil(dataBuf.length / 64));
+        stream = stream.slice(0, dataBuf.length);
+        for(var i=0; i<stream.length; i++){
+            stream[i] ^= dataBuf[i];
+        };
+        return new __buffer.Buffer(stream);
     };
 
     return this;

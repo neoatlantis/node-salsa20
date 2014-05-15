@@ -9,4 +9,10 @@ for (i = 9; i < 40; i++) keyArray[i] = 0;
 var key = new buffer.Buffer(keyArray);
 
 encryptor = salsa20().key(key);
-console.log(encryptor);
+decryptor = salsa20().key(key);
+
+var plaintext = new buffer.Buffer('Hello, world!', 'ascii'),
+    ciphertext = encryptor.encrypt(plaintext),
+    newPlaintext = decryptor.decrypt(ciphertext);
+
+console.log(newPlaintext.toString());
