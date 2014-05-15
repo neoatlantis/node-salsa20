@@ -1,5 +1,20 @@
-module.exports = function(){
-    return new _Salsa20();
+/*
+ * A pseudo-Salsa20 implementation
+ * ===============================
+ *
+ * Designed by Daniel J. Bernstein, The Salsa20 is a stream cipher constructed
+ * with a hashing function.
+ *
+ * WARNING: This module is currently still not fully verified. The correctness
+ * and the security is not sure. It seems that it is not compatiable to one of
+ * the found example! Use this at your own risk, you have been warned!
+ *
+ * Reference: Another implementation in Javascript at:
+ *      https://gist.github.com/dchest/4582374
+ */
+
+module.exports = function(rounds){
+    return new _Salsa20(rounds);
 };
 
 function _Salsa20(rounds){    
@@ -41,7 +56,7 @@ function _Salsa20(rounds){
         var retArray = new Array(64);
         for(i=0; i<64; i++) retArray[i] = ret.buffer[i];
 
-        return retArray;
+        return new __buffer.Buffer(retArray);
     };
 
     //////////////////////////////////////////////////////////////////////
@@ -86,9 +101,9 @@ function _Salsa20(rounds){
         // first 8 bytes will be taken as nonce. the rest will be the key.
         if(bufKey.length < 40) throw new Error('invalid-key');
         for(var i=0; i<2; i++)
-            nonce[i] = bufKey.readUInt32LE(i);
+            nonce[i] = bufKey.readUInt32BE(i);
         for(var i=2; i<10; i++)
-            key[i] = bufKey.readUInt32LE(i);
+            key[i] = bufKey.readUInt32BE(i);
         self.encrypt = _xorBuf;
         self.decrypt = _xorBuf;
         delete self.key;
@@ -99,10 +114,10 @@ function _Salsa20(rounds){
         _counterReset();
         var blocks = [], block, blockBuf, i, j;
         for(i=0; i<blockCount; i++){
-            blocks = blocks.concat(_salsa20Block());
+            blocks.push(_salsa20Block());
             _counterInc();
         };
-        return blocks;
+        return __buffer.Buffer.concat(blocks);
     };
 
     function _xorBuf(dataBuf){

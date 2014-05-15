@@ -8,11 +8,17 @@ for (i = 9; i < 40; i++) keyArray[i] = 0;
 
 var key = new buffer.Buffer(keyArray);
 
-encryptor = salsa20().key(key);
-decryptor = salsa20().key(key);
+encryptor = salsa20(14).key(key);
+decryptor = salsa20(14).key(key);
 
-var plaintext = new buffer.Buffer('Hello, world!', 'ascii'),
-    ciphertext = encryptor.encrypt(plaintext),
-    newPlaintext = decryptor.decrypt(ciphertext);
+//var plaintext = new buffer.Buffer(10240000);
+plaintext = new buffer.Buffer('sakdfjksafdjksafjkdsakfsa', 'ascii');
 
+var s,e;
+s = process.hrtime();
+var ciphertext = encryptor.encrypt(plaintext);
+e = process.hrtime();
+console.log(plaintext.length / (e[0] + e[1]/1000000000 - s[0] - s[1]/1000000000));
+
+var newPlaintext = decryptor.decrypt(ciphertext);
 console.log(newPlaintext.toString());
