@@ -4,17 +4,18 @@ module.exports = function(){
 
 function _Salsa20(){    
     var self = this;
+    var __buffer = require('buffer');
 
     var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574],
-        rounds = 12;
+        rounds = 20;
 
     function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
     function coreFunc(ina){
         // Salsa20 Core Word Specification
         var i, ret = new Uint32Array(16);
         var x = new Uint32Array(16);
-        for (i=0; i<16; ++i) x[i] = ina[i];
-        for (i=20; i>0; i-=2){
+        for (i=0; i<16; i++) x[i] = ina[i];
+        for (i=0; i<rounds; i++){
             x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
             x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
             x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
@@ -32,7 +33,7 @@ function _Salsa20(){
             x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
             x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
         };
-        for(i=0; i<16; ++i) ret[i] = (x[i] + ina[i]);
+        for(i=0; i<16; i++) ret[i] = (x[i] + ina[i]);
         return ret;
     };
 
@@ -40,40 +41,32 @@ function _Salsa20(){
 
     var key = new Uint32Array(8),
         nonce = new Uint32Array(2),
-        counter = new Uint32Array(2),
-        blockUsed = 64,
-        block = [];
+        counter = new Uint32Array(2);
 
     function _salsa20Block(){
         var input = new Uint32Array(16);
 
-        input.buffer[0] = sigma[0];
-        input.buffer[1] = key[0];
-        input.buffer[2] = key[1];
-        input.buffer[3] = key[2];
-        input.buffer[4] = key[3];
-        input.buffer[5] = sigma[1];
-        input.buffer[6] = nonce[0];
-        input.buffer[7] = nonce[1];
-        input.buffer[8] = counter[0];
-        input.buffer[9] = counter[1];
-        input.buffer[10] = sigma[2];
-        input.buffer[11] = key[4];
-        input.buffer[12] = key[5];
-        input.buffer[13] = key[6];
-        input.buffer[14] = key[7];
-        input.buffer[15] = sigma[3];
+        input[0] = sigma[0];
+        input[1] = key[0];
+        input[2] = key[1];
+        input[3] = key[2];
+        input[4] = key[3];
+        input[5] = sigma[1];
+        input[6] = nonce[0];
+        input[7] = nonce[1];
+        input[8] = counter[0];
+        input[9] = counter[1];
+        input[10] = sigma[2];
+        input[11] = key[4];
+        input[12] = key[5];
+        input[13] = key[6];
+        input[14] = key[7];
+        input[15] = sigma[3];
 
-        var block = coreFunc(input);
-        
+        return coreFunc(input);
     };
 
-    function _reset(){
-        counter[0] = 0;
-        counter[1] = 0;
-        blockUsed = 64;
-    };
-
+    function _counterReset(){counter[0] = 0; counter[1] = 0;};
     function _counterInc(){
         counter[0] += 1;
         if(0 == counter[0]) counter[1] += 1;
@@ -82,14 +75,32 @@ function _Salsa20(){
     //////////////////////////////////////////////////////////////////////
 
     this.key = function(bufKey){
-        // buffer typed bufKey, first 32 bytes will be used.
-        if(bufKey.length < 32) throw new Error('invalid-key');
-        for(var i=0; i<8; i++)
+        // buffer typed bufKey, first 40 bytes will be used. among them, the
+        // first 8 bytes will be taken as nonce. the rest will be the key.
+        if(bufKey.length < 40) throw new Error('invalid-key');
+        for(var i=0; i<2; i++)
+            nonce[i] = bufKey.readUInt32LE(i);
+        for(var i=2; i<10; i++)
             key[i] = bufKey.readUInt32LE(i);
         self.encrypt = encrypt;
         self.decrypt = decrypt;
         delete self.key;
+        console.log(_getStream(1).toString('hex'));
         return self;
+    };
+
+    function _getStream(blockCount){
+        _counterReset();
+        var blocks = [], block, blockBuf, i, j;
+        for(i=0; i<blockCount; i++){
+            block = _salsa20Block();
+            blockBuf = new __buffer.Buffer(64);
+            for(j=0; j<16; j++)
+                blockBuf.writeUInt32LE(block[j], j);
+            blocks.push(blockBuf);
+            _counterInc();
+        };
+        return __buffer.Buffer.concat(blocks);
     };
 
     function encrypt(dataBuf){
