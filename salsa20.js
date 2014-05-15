@@ -5,10 +5,7 @@ module.exports = function(){
 function _Salsa20(){    
     var self = this;
 
-    function R(a, b){
-        return (((a) << (b)) | ((a) >>> (32 - (b))));
-    };
-
+    function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
     function wordSpecification(ina){
         var i, ret = new Uint32Array(16);
         var x = new Uint32Array(16);
@@ -35,5 +32,37 @@ function _Salsa20(){
         return ret;
     };
 
+    //////////////////////////////////////////////////////////////////////
+
+    var key = new Uint32Array(),
+        nonce = new Uint32Array(2),
+        counter = new Uint32Array(2),
+        blockUsed = 64,
+        block = [];
+
+    function _salsa20(key, nonce, counter){
+        
+    };
+
+    function _reset(){
+        counter[0] = 0;
+        counter[1] = 0;
+        blockUsed = 64;
+    };
+
+    function _counterInc(){
+        counter[0] += 1;
+        if(0 == counter[0]) counter[1] += 1;
+    };
+
+    //////////////////////////////////////////////////////////////////////
+
+    this.key = function(bufKey){
+        // buffer typed bufKey, first 32 bytes will be used.
+
+    };
+
     return this;
 };
+
+new _Salsa20();
