@@ -33,8 +33,15 @@ function _Salsa20(){
             x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
             x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
         };
-        for(i=0; i<16; i++) ret[i] = (x[i] + ina[i]);
-        return ret;
+
+        for(i=0; i<16; i++){
+            ret.set(i, x[i] + ina[i]);
+        };
+
+        var retArray = new Array(64);
+        for(i=0; i<64; i++) retArray[i] = ret.buffer[i];
+
+        return new __buffer.Buffer(retArray);;
     };
 
     //////////////////////////////////////////////////////////////////////
@@ -93,11 +100,7 @@ function _Salsa20(){
         _counterReset();
         var blocks = [], block, blockBuf, i, j;
         for(i=0; i<blockCount; i++){
-            block = _salsa20Block();
-            blockBuf = new __buffer.Buffer(64);
-            for(j=0; j<16; j++)
-                blockBuf.writeUInt32LE(block[j], j);
-            blocks.push(blockBuf);
+            blocks.push(_salsa20Block());
             _counterInc();
         };
         return __buffer.Buffer.concat(blocks);
