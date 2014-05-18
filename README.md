@@ -7,14 +7,16 @@ Salsa20 encrypt/decryptor.
 
 Although Salsa20 is designed as a stream cipher, the streaming function is
 NOT included in this implementation. The output ciphertext is the same
-length as the input, but the counter will be reset to zero each time the
+length as the input, but the counter will be reseted to zero each time the
 encryption/decryption begins.
 
-**WARNING**: This module is wrtten by someone who have no rich experiences in
+**WARNING**: This module is written by someone who have no rich experiences in
 programming with JavaScript. The algorithm is partially verified against the
-specification, but other security vulnurabilities possible exists. The code
-is NOT reviewed by any cryptographer!  Use this at your own risk, you have
+specification, but other security vulnerabilities will possibly exists. The
+code is NOT reviewed by any cryptographer! Use this at your own risk, you have
 been warned!
+
+_And also note, that this module is licensed under GPLv3._
 
 Usage
 -----
