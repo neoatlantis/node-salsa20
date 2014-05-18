@@ -1,0 +1,22 @@
+{
+    "name": "node-salsa20",
+    "author": "NeoAtlantis",
+    "description": "pure javascript implemented salsa20 cipher",
+    "version": "0.0.1",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/neoatlantis/node-salsa20.git"
+    },
+    "dependencies": {},
+    "homepage": "https://github.com/neoatlantis/node-salsa20",
+    "engines": {
+        "node": ">=0.10"
+    },
+    "keywords": [
+        "cryptography",
+        "encryption",
+        "salsa",
+        "cipher"
+    ],
+    "main": "./salsa20.js"
+}
