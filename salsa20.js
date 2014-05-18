@@ -150,24 +150,35 @@ function _Salsa20(rounds){
     //////////////////////////////////////////////////////////////////////
 
     function _xorBuf(dataBuf){
+        var origLength = dataBuf.length,
+            blocksCount = Math.ceil(origLength / 64);
+            block;
+        var stream = new Array(blocksCount * 64);
+        var b=0, i, j;
+
         _counterReset();
-        var blocksCount = Math.ceil(dataBuf.length / 64;
-        var stream = new Array(dataBuf.length);
-        stream = stream.slice(0, dataBuf.length);
-        for(var i=0; i<stream.length; i++){
-            stream[i] ^= dataBuf[i];
+        for(i=0; i<blocksCount; i++){
+            block = blockGenerator();
+            for(j=0; j<64; j++){
+                stream[b+j] ^= block[j];
+            };
+            b += 64;
         };
-        return new __buffer.Buffer(stream);
+
+        return new __buffer.Buffer(stream.slice(0, origLength));
     };
 
     this.key = function(bufKey){
-        // buffer typed bufKey, first 40 bytes will be used. among them, the
-        // first 8 bytes will be taken as nonce. the rest will be the key.
-        if(bufKey.length < 40) throw new Error('invalid-key');
-        for(var i=0; i<2; i++)
-            nonce[i] = bufKey.readUInt32BE(i);
-        for(var i=2; i<10; i++)
-            key[i] = bufKey.readUInt32BE(i);
+        // buffer typed bufKey, first 24 or 40 bytes will be used. among them,
+        // the first 8 bytes will be taken as nonce. the rest will be the key.
+        if(bufKey.length < 24) throw new Error('invalid-key');
+
+        var nonceBuf = bufKey.slice(0, 8);
+        if(bufKey.length < 40)
+            _initialize(nonceBuf, bufKey.slice(8, 24);
+        else
+            _initialize(nonceBuf, bufKey.slice(8, 40);
+
         self.encrypt = _xorBuf;
         self.decrypt = _xorBuf;
         delete self.key;
