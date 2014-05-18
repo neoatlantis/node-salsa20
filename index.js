@@ -12,7 +12,7 @@ encryptor = salsa20(14).key(key);
 decryptor = salsa20(14).key(key);
 
 //var plaintext = new buffer.Buffer(10240000);
-plaintext = new buffer.Buffer('sakdfjksafdjksafjkdsakfsa', 'ascii');
+var plaintext = new buffer.Buffer('sakkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdfjksafdjksafjkdsakfsa', 'ascii');
 
 var s,e;
 s = process.hrtime();

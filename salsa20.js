@@ -123,7 +123,7 @@ function _Salsa20(rounds){
     function _initialize(nonceBuf, keyBuf){
         var nonce = new Uint32Array(2);
         for(var i=0; i<8; i++) nonce.buffer[i] = nonceBuf[i];
-        if(key.length == 32){
+        if(32 == keyBuf.length){
             var key = new Uint32Array(8);
             for(var i=0; i<32; i++) key.buffer[i] = keyBuf[i];
             blockGenerator = (function(n, k){
@@ -133,7 +133,7 @@ function _Salsa20(rounds){
                     return ret;
                 };
             })(nonce, key);
-        else if(16 == key.length){
+        } else if(16 == keyBuf.length){
             var key = new Uint32Array(4);
             for(var i=0; i<16; i++) key.buffer[i] = keyBuf[i];
             blockGenerator = (function(n, k){
@@ -151,10 +151,11 @@ function _Salsa20(rounds){
 
     function _xorBuf(dataBuf){
         var origLength = dataBuf.length,
-            blocksCount = Math.ceil(origLength / 64);
+            blocksCount = Math.ceil(origLength / 64),
             block;
         var stream = new Array(blocksCount * 64);
         var b=0, i, j;
+        for(i=0; i<origLength; i++) stream[i] = dataBuf[i];
 
         _counterReset();
         for(i=0; i<blocksCount; i++){
@@ -175,9 +176,9 @@ function _Salsa20(rounds){
 
         var nonceBuf = bufKey.slice(0, 8);
         if(bufKey.length < 40)
-            _initialize(nonceBuf, bufKey.slice(8, 24);
+            _initialize(nonceBuf, bufKey.slice(8, 24));
         else
-            _initialize(nonceBuf, bufKey.slice(8, 40);
+            _initialize(nonceBuf, bufKey.slice(8, 40));
 
         self.encrypt = _xorBuf;
         self.decrypt = _xorBuf;
