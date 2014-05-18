@@ -22,7 +22,7 @@ function _Salsa20(rounds){
     var __buffer = require('buffer');
     if(!rounds || rounds < 12) rounds = 12;
 
-    var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
+    var tau = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
 
     function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
     function coreFunc(ina){
@@ -68,22 +68,22 @@ function _Salsa20(rounds){
     function _salsa20Block(){
         var input = new Uint32Array(16);
 
-        input[0] = sigma[0];
+        input[0] = tau[0];
         input[1] = key[0];
         input[2] = key[1];
         input[3] = key[2];
         input[4] = key[3];
-        input[5] = sigma[1];
+        input[5] = tau[1];
         input[6] = nonce[0];
         input[7] = nonce[1];
         input[8] = counter[0];
         input[9] = counter[1];
-        input[10] = sigma[2];
+        input[10] = tau[2];
         input[11] = key[4];
         input[12] = key[5];
         input[13] = key[6];
         input[14] = key[7];
-        input[15] = sigma[3];
+        input[15] = tau[3];
 
         return coreFunc(input);
     };
