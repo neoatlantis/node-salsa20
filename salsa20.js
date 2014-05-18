@@ -122,10 +122,10 @@ function _Salsa20(rounds){
 
     function _initialize(nonceBuf, keyBuf){
         var nonce = new Uint32Array(2);
-        for(var i=0; i<2; i++) nonce.buffer[i] = nonceBuf[i];
+        for(var i=0; i<8; i++) nonce.buffer[i] = nonceBuf[i];
         if(key.length == 32){
             var key = new Uint32Array(8);
-            for(var i=0; i<8; i++) key.buffer[i] = keyBuf[i];
+            for(var i=0; i<32; i++) key.buffer[i] = keyBuf[i];
             blockGenerator = (function(n, k){
                 return function(){
                     var ret = _salsa20ExpansionKey8(k, n, counter);
@@ -135,7 +135,7 @@ function _Salsa20(rounds){
             })(nonce, key);
         else if(16 == key.length){
             var key = new Uint32Array(4);
-            for(var i=0; i<4; i++) key.buffer[i] = keyBuf[i];
+            for(var i=0; i<16; i++) key.buffer[i] = keyBuf[i];
             blockGenerator = (function(n, k){
                 return function(){
                     var ret = _salsa20ExpansionKey4(k, n, counter);
