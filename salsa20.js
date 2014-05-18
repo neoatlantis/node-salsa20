@@ -22,8 +22,6 @@ function _Salsa20(rounds){
     var __buffer = require('buffer');
     if(!rounds || rounds < 12) rounds = 12;
 
-    var tau = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
-
     function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
     function coreFunc(ina){
         // Salsa20 Core Word Specification
@@ -59,34 +57,64 @@ function _Salsa20(rounds){
         return new __buffer.Buffer(retArray);
     };
 
+    var _salsa20ExpansionKey;
+
+    /* key expansion for 8 words(32 bytes) key */
+    function _salsa20ExpansionKey8(key8, n4){
+        var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
+        var input = new Uint32Array(16);
+
+        input[0]  = sigma[0];
+        input[1]  = key8[0];
+        input[2]  = key8[1];
+        input[3]  = key8[2];
+        input[4]  = key8[3];
+        input[5]  = sigma[1];
+        input[6]  = n4[0];
+        input[7]  = n4[1];
+        input[8]  = n4[2];
+        input[9]  = n4[3];
+        input[10] = sigma[2];
+        input[11] = key8[4];
+        input[12] = key8[5];
+        input[13] = key8[6];
+        input[14] = key8[7];
+        input[15] = sigma[3];
+
+        return coreFunc(input);
+    };
+
+    /* key expansion for 4 words key(16 bytes) */
+    function _salsa20ExpansionKey4(key4, n4){
+        var tau = [0x61707865, 0x3120646e, 0x79622d36, 0x6b206574];
+        var input = new Uint32Array(16);
+
+        input[0]  = tau[0];
+        input[1]  = key4[0];
+        input[2]  = key4[1];
+        input[3]  = key4[2];
+        input[4]  = key4[3];
+        input[5]  = tau[1];
+        input[6]  = n4[0];
+        input[7]  = n4[1];
+        input[8]  = n4[2];
+        input[9]  = n4[3];
+        input[10] = tau[2];
+        input[11] = key4[0];
+        input[12] = key4[1];
+        input[13] = key4[2];
+        input[14] = key4[3];
+        input[15] = tau[3];
+
+        return coreFunc(input);
+    };
+
     //////////////////////////////////////////////////////////////////////
 
     var key = new Uint32Array(8),
         nonce = new Uint32Array(2),
         counter = new Uint32Array(2);
 
-    function _salsa20Block(){
-        var input = new Uint32Array(16);
-
-        input[0] = tau[0];
-        input[1] = key[0];
-        input[2] = key[1];
-        input[3] = key[2];
-        input[4] = key[3];
-        input[5] = tau[1];
-        input[6] = nonce[0];
-        input[7] = nonce[1];
-        input[8] = counter[0];
-        input[9] = counter[1];
-        input[10] = tau[2];
-        input[11] = key[4];
-        input[12] = key[5];
-        input[13] = key[6];
-        input[14] = key[7];
-        input[15] = tau[3];
-
-        return coreFunc(input);
-    };
 
     function _counterReset(){counter[0] = 0; counter[1] = 0;};
     function _counterInc(){
