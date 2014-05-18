@@ -30,19 +30,22 @@ bytes are taken as real encryption key. Depending on whether it's 16 or
 32 bytes, according to the specification, there will be slightly internal
 differences in processing. But you can ignore this.
      
-    var salsa20 = require('/PATH/TO/THIS/MODULE.js');
+```javascript
+var salsa20 = require('/PATH/TO/THIS/MODULE.js');
 
-    // encrypt:
-    var encryptor = salsa20(12).key(KEY); // 12 is the round number
-    var CIPHERTEXT = encryptor.encrypt(PLAINTEXT);
+// encrypt:
+var encryptor = salsa20(12).key(KEY); // 12 is the round number
+var CIPHERTEXT = encryptor.encrypt(PLAINTEXT);
 
-    // decrypt:
-    var decryptor = salsa20(12).key(KEY); // 12 is the round number
-    var DECRYPTED = decryptor.decrypt(CIPHERTEXT);
+// decrypt:
+var decryptor = salsa20(12).key(KEY); // 12 is the round number
+var DECRYPTED = decryptor.decrypt(CIPHERTEXT);
+```
 
 References
 ----------
 [1] Another implementation in Javascript at:
      https://gist.github.com/dchest/4582374
+
 [2] Daniel. J. Bernstein, Salsa20 specification, retrived 2014/05/18 from:
      http://cr.yp.to/snuffle/spec.pdf
