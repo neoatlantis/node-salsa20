@@ -53,14 +53,11 @@ function _Salsa20(rounds){
 
         var retArray = new Array(64);
         for(i=0; i<64; i++) retArray[i] = ret.buffer[i];
-
-        return new __buffer.Buffer(retArray);
+        return retArray;
     };
 
-    var _salsa20ExpansionKey;
-
     /* key expansion for 8 words(32 bytes) key */
-    function _salsa20ExpansionKey8(key8, n4){
+    function _salsa20ExpansionKey8(key8, nonce2, counter2){
         var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
         var input = new Uint32Array(16);
 
@@ -70,10 +67,12 @@ function _Salsa20(rounds){
         input[3]  = key8[2];
         input[4]  = key8[3];
         input[5]  = sigma[1];
-        input[6]  = n4[0];
-        input[7]  = n4[1];
-        input[8]  = n4[2];
-        input[9]  = n4[3];
+
+        input[6]  = nonce2[0];
+        input[7]  = nonce2[1];
+        input[8]  = counter2[0];
+        input[9]  = counter2[1];
+
         input[10] = sigma[2];
         input[11] = key8[4];
         input[12] = key8[5];
@@ -85,7 +84,7 @@ function _Salsa20(rounds){
     };
 
     /* key expansion for 4 words key(16 bytes) */
-    function _salsa20ExpansionKey4(key4, n4){
+    function _salsa20ExpansionKey4(key4, nonce2, counter2){
         var tau = [0x61707865, 0x3120646e, 0x79622d36, 0x6b206574];
         var input = new Uint32Array(16);
 
@@ -95,10 +94,12 @@ function _Salsa20(rounds){
         input[3]  = key4[2];
         input[4]  = key4[3];
         input[5]  = tau[1];
-        input[6]  = n4[0];
-        input[7]  = n4[1];
-        input[8]  = n4[2];
-        input[9]  = n4[3];
+
+        input[6]  = nonce2[0];
+        input[7]  = nonce2[1];
+        input[8]  = counter2[0];
+        input[9]  = counter2[1];
+
         input[10] = tau[2];
         input[11] = key4[0];
         input[12] = key4[1];
@@ -110,11 +111,8 @@ function _Salsa20(rounds){
     };
 
     //////////////////////////////////////////////////////////////////////
-
-    var key = new Uint32Array(8),
-        nonce = new Uint32Array(2),
-        counter = new Uint32Array(2);
-
+    var counter = new Uint32Array(2);
+    var blockGenerator;
 
     function _counterReset(){counter[0] = 0; counter[1] = 0;};
     function _counterInc(){
@@ -122,7 +120,45 @@ function _Salsa20(rounds){
         if(0 == counter[0]) counter[1] += 1;
     };
 
+    function _initialize(nonceBuf, keyBuf){
+        var nonce = new Uint32Array(2);
+        for(var i=0; i<2; i++) nonce.buffer[i] = nonceBuf[i];
+        if(key.length == 32){
+            var key = new Uint32Array(8);
+            for(var i=0; i<8; i++) key.buffer[i] = keyBuf[i];
+            blockGenerator = (function(n, k){
+                return function(){
+                    var ret = _salsa20ExpansionKey8(k, n, counter);
+                    _counterInc();
+                    return ret;
+                };
+            })(nonce, key);
+        else if(16 == key.length){
+            var key = new Uint32Array(4);
+            for(var i=0; i<4; i++) key.buffer[i] = keyBuf[i];
+            blockGenerator = (function(n, k){
+                return function(){
+                    var ret = _salsa20ExpansionKey4(k, n, counter);
+                    _counterInc();
+                    return ret;
+                };
+            })(nonce, key);
+        } else
+            throw new Error('invalid-key-length');
+    };
+
     //////////////////////////////////////////////////////////////////////
+
+    function _xorBuf(dataBuf){
+        _counterReset();
+        var blocksCount = Math.ceil(dataBuf.length / 64;
+        var stream = new Array(dataBuf.length);
+        stream = stream.slice(0, dataBuf.length);
+        for(var i=0; i<stream.length; i++){
+            stream[i] ^= dataBuf[i];
+        };
+        return new __buffer.Buffer(stream);
+    };
 
     this.key = function(bufKey){
         // buffer typed bufKey, first 40 bytes will be used. among them, the
@@ -138,24 +174,6 @@ function _Salsa20(rounds){
         return self;
     };
 
-    function _getStream(blockCount){
-        _counterReset();
-        var blocks = [], block, blockBuf, i, j;
-        for(i=0; i<blockCount; i++){
-            blocks.push(_salsa20Block());
-            _counterInc();
-        };
-        return __buffer.Buffer.concat(blocks);
-    };
-
-    function _xorBuf(dataBuf){
-        var stream = _getStream(Math.ceil(dataBuf.length / 64));
-        stream = stream.slice(0, dataBuf.length);
-        for(var i=0; i<stream.length; i++){
-            stream[i] ^= dataBuf[i];
-        };
-        return new __buffer.Buffer(stream);
-    };
 
     return this;
 };
