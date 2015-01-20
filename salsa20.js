@@ -8,18 +8,6 @@
 (function(){
 //////////////////////////////////////////////////////////////////////////////
 
-function toHEX(ab){
-    var ary = Uint8Array(ab);
-    var ret = '';
-    for(var i=0; i<ary.length; i++){
-        if(ary[i] < 16)
-            ret += '0' + (ary[i]).toString(16);
-        else
-            ret += (ary[i]).toString(16);
-    }
-    return ret;
-};
-
 function _Salsa20(rounds, testing){
     var self = this;
 
