@@ -23,9 +23,6 @@
  * this is 10. You can make it larger, e.g. 14, or 20, this may enhance the
  * security, but will slow the speed).
  *
- * All other inputs, namely, the `key`, the `plaintext` or the `ciphertext`
- * are NodeJS Buffers. The processes are always blocking.
- * 
  * The first 8 bytes of the key is taken as nonce, the rest following 16 or 32
  * bytes are taken as real encryption key. Depending on whether it's 16 or
  * 32 bytes, according to the specification, there will be slightly internal
@@ -48,21 +45,19 @@
  * [2] Daniel. J. Bernstein, Salsa20 specification, retrived 2014/05/18 from:
  *      http://cr.yp.to/snuffle/spec.pdf
  */
+(function(){
+//////////////////////////////////////////////////////////////////////////////
 
-module.exports = function(rounds){
-    return new _Salsa20(rounds);
-};
-
-function _Salsa20(rounds){    
+function _Salsa20(rounds){
     var self = this;
-    var __buffer = require('buffer');
     if(!rounds || rounds < 10) rounds = 10;
 
-    function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
-    function coreFunc(ina){
+    var coreFuncX = new Uint32Array(16);
+    function coreFunc(ina, ret){
+        function R(a, b){return (((a) << (b)) | ((a) >>> (32 - (b))));};
         // Salsa20 Core Word Specification
-        var i, ret = new Uint32Array(16);
-        var x = new Uint32Array(16);
+        var i; //ret = new Uint32Array(16);
+        var x = coreFuncX;
         for (i=0; i<16; i++) x[i] = ina[i];
         for (i=0; i<rounds; i++){
             x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
@@ -83,19 +78,19 @@ function _Salsa20(rounds){
             x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
         };
 
-        for(i=0; i<16; i++){
-            ret.set(i, x[i] + ina[i]);
-        };
-
-        var retArray = new Array(64);
-        for(i=0; i<64; i++) retArray[i] = ret.buffer[i];
-        return retArray;
+        for(i=0; i<16; i++) ret[i] = x[i] + ina[i];
     };
 
+    /* key expansion */
+
+    var _keyExpanBuffer = new Uint32Array(16);
+
     /* key expansion for 8 words(32 bytes) key */
-    function _salsa20ExpansionKey8(key8, nonce2, counter2){
-        var sigma = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
-        var input = new Uint32Array(16);
+    function _salsa20BufferFillKey8(nonce2, key8){
+        var input = _keyExpanBuffer,
+            sigma = new Uint32Array(
+                [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
+            );
 
         input[0]  = sigma[0];
         input[1]  = key8[0];
@@ -106,8 +101,6 @@ function _Salsa20(rounds){
 
         input[6]  = nonce2[0];
         input[7]  = nonce2[1];
-        input[8]  = counter2[0];
-        input[9]  = counter2[1];
 
         input[10] = sigma[2];
         input[11] = key8[4];
@@ -115,14 +108,23 @@ function _Salsa20(rounds){
         input[13] = key8[6];
         input[14] = key8[7];
         input[15] = sigma[3];
+    };
 
-        return coreFunc(input);
+    function _salsa20ExpansionKey8(counter2, ret){
+        var input = _keyExpanBuffer;
+
+        input[8]  = counter2[0];
+        input[9]  = counter2[1];
+
+        return coreFunc(input, ret);
     };
 
     /* key expansion for 4 words key(16 bytes) */
-    function _salsa20ExpansionKey4(key4, nonce2, counter2){
-        var tau = [0x61707865, 0x3120646e, 0x79622d36, 0x6b206574];
-        var input = new Uint32Array(16);
+    function _salsa20BufferFillKey8(nonce2, key4){
+        var input = _keyExpanBuffer;
+            tau = new Uint32Array(
+                [0x61707865, 0x3120646e, 0x79622d36, 0x6b206574]
+            );
 
         input[0]  = tau[0];
         input[1]  = key4[0];
@@ -133,8 +135,6 @@ function _Salsa20(rounds){
 
         input[6]  = nonce2[0];
         input[7]  = nonce2[1];
-        input[8]  = counter2[0];
-        input[9]  = counter2[1];
 
         input[10] = tau[2];
         input[11] = key4[0];
@@ -142,8 +142,15 @@ function _Salsa20(rounds){
         input[13] = key4[2];
         input[14] = key4[3];
         input[15] = tau[3];
+    };
 
-        return coreFunc(input);
+    function _salsa20ExpansionKey4(counter2, ret){
+        var input = _keyExpanBuffer;
+
+        input[8]  = counter2[0];
+        input[9]  = counter2[1];
+
+        return coreFunc(input, ret);
     };
 
     //////////////////////////////////////////////////////////////////////
@@ -157,61 +164,70 @@ function _Salsa20(rounds){
     };
 
     function _initialize(nonceBuf, keyBuf){
-        var nonce = new Uint32Array(2);
-        for(var i=0; i<8; i++) nonce.buffer[i] = nonceBuf[i];
-        if(32 == keyBuf.length){
-            var key = new Uint32Array(8);
-            for(var i=0; i<32; i++) key.buffer[i] = keyBuf[i];
-            blockGenerator = (function(n, k){
-                return function(){
-                    var ret = _salsa20ExpansionKey8(k, n, counter);
+        var nonce = new Uint32Array(nonceBuf);
+        if(32 == keyBuf.byteLength){
+            var key = new Uint32Array(keyBuf);
+            _salsa20BufferFillKey8(nonce, key);
+            blockGenerator = (function(){
+                return function(ret){
+                    _salsa20ExpansionKey8(counter, ret);
                     _counterInc();
-                    return ret;
                 };
-            })(nonce, key);
-        } else if(16 == keyBuf.length){
-            var key = new Uint32Array(4);
-            for(var i=0; i<16; i++) key.buffer[i] = keyBuf[i];
-            blockGenerator = (function(n, k){
-                return function(){
-                    var ret = _salsa20ExpansionKey4(k, n, counter);
+            })();
+        } else if(16 == keyBuf.byteLength){
+            var key = new Uint32Array(keyBuf);
+            _salsa20BufferFillKey4(nonce, key);
+            blockGenerator = (function(){
+                return function(ret){
+                    _salsa20ExpansionKey4(counter, ret);
                     _counterInc();
-                    return ret;
                 };
-            })(nonce, key);
+            })();
         } else
             throw new Error('invalid-key-length');
     };
 
     //////////////////////////////////////////////////////////////////////
 
+    function isArrayBuffer(v){
+        return toString.apply(v) === '[object ArrayBuffer]';
+    };
+
     function _xorBuf(dataBuf){
-        var origLength = dataBuf.length,
+        if(!isArrayBuffer(dataBuf)) throw new Error('invalid-input');
+
+        var origLength = dataBuf.byteLength,
             blocksCount = Math.ceil(origLength / 64),
-            block;
-        var stream = new Array(blocksCount * 64);
+            block = new Uint32Array(16);    // holder of new generated block
+        var stream = new Uint8Array(dataBuf),
+            xorStream = new Uint8Array(stream.length + 64);
         var b=0, i, j;
-        for(i=0; i<origLength; i++) stream[i] = dataBuf[i];
 
         _counterReset();
         for(i=0; i<blocksCount; i++){
-            block = blockGenerator();
-            for(j=0; j<64; j++){
-                stream[b+j] ^= block[j];
+            blockGenerator(block);
+            for(j=0; j<16; j++){
+                xorStream[b++] = (block[j] >> 24) & 0xff;
+                xorStream[b++] = (block[j] >> 16) & 0xff;
+                xorStream[b++] = (block[j] >> 8) & 0xff;
+                xorStream[b++] = block[j] & 0xff;
             };
-            b += 64;
         };
 
-        return new __buffer.Buffer(stream.slice(0, origLength));
+        for(i=0; i<origLength; i++) stream[i] ^= xorStream[i];
+        return stream.buffer;
     };
 
     this.key = function(bufKey){
+        if(!isArrayBuffer(bufKey)) throw new Error('invalid-key');
+        var keylen = bufKey.byteLength;
+
         // buffer typed bufKey, first 24 or 40 bytes will be used. among them,
         // the first 8 bytes will be taken as nonce. the rest will be the key.
-        if(bufKey.length < 24) throw new Error('invalid-key');
+        if(keylen < 24) throw new Error('invalid-key');
 
         var nonceBuf = bufKey.slice(0, 8);
-        if(bufKey.length < 40)
+        if(keylen < 40)
             _initialize(nonceBuf, bufKey.slice(8, 24));
         else
             _initialize(nonceBuf, bufKey.slice(8, 40));
@@ -225,3 +241,20 @@ function _Salsa20(rounds){
 
     return this;
 };
+
+
+
+
+/* Now Export the Module */
+
+var exporter = _Salsa20;
+
+/* Export */
+if('undefined' != typeof define){
+    define([], function(){return exporter;});
+} else if('undefined' != typeof module){
+    module.exports = exporter;
+};
+
+//////////////////////////////////////////////////////////////////////////////
+})();
