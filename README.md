@@ -14,7 +14,7 @@ If you decide to use this library, remember that this cipher takes your first
 real encryption key. **Stream with such same IV and keys can NOT be safely used
 repeatedly!**
 
-This is the version 0.1.1 of this library with a few changes.I've dropped the
+This is the version 0.1.2 of this library with a few changes.I've dropped the
 use of the buffer in NodeJS. All inputs and outputs are ArrayBuffers. If you
 have encountered any incompatible issues, please have a look at `example.js`
 again.
