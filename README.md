@@ -33,6 +33,10 @@ Known Issues
    streams, each of which called sequentially on the same instance. In principle
    this should be a feature, but current tests doesn't show this. More
    investigations are needed.
+0. Sorry for that, but this version may be not backwards compatible
+   (version 0.0.1), some serious errors occurred in the previous version.
+   This may be a big bad news for you if you've encrypted something with this
+   library :(
 
 Usage
 -----
