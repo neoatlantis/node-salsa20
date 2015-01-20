@@ -8,6 +8,18 @@
 
 var salsa20 = require('./salsa20.js');
 
+function toHEX(ab){
+    var ary = Uint8Array(ab);
+    var ret = '';
+    for(var i=0; i<ary.length; i++){
+        if(ary[i] < 16)
+            ret += '0' + (ary[i]).toString(16);
+        else
+            ret += (ary[i]).toString(16);
+    }
+    return ret;
+}
+
 function isArrayBuffer(v){
     return toString.apply(v) === '[object ArrayBuffer]';
 };
@@ -49,7 +61,7 @@ function testExpansion(rounds, nonce, key, assertedStream){
 
     var streamBuf = toArrayBuffer(assertedStream);
     var ret = cipher.encrypt(toArrayBuffer(assertedStream));
-    return equalArrayBuffer(ret, new Uint8Array(64).buffer);
+    return equalArrayBuffer(ret, new Uint8Array(ret.byteLength).buffer);
 };
 
 function testCore(rounds, input, assertedOutput){
@@ -65,7 +77,6 @@ function runTest(desc, result){
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-
 
 runTest('Core function test vector 1', testCore(
     10,
@@ -206,4 +217,22 @@ runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test
     '0A5DB00356A9FC4FA2F5489BEE4194E7',
     '8B354C8F8384D5591EA0FF23E7960472B494D04B2F787FC87B6569CB9021562F' +
     'F5B1287A4D89FB316B69971E9B861A109CF9204572E3DE7EAB4991F4C7975427'
+));
+
+
+runTest('Streams over more blocks, Set 1 Vector #0', testExpansion(
+    10,
+    '0000000000000000',
+    '80000000000000000000000000000000' +
+    '00000000000000000000000000000000',
+    'E3BE8FDD8BECA2E3EA8EF9475B29A6E7003951E1097A5C38D23B7A5FAD9F6844' + // 000-031
+    'B22C97559E2723C7CBBD3FE4FC8D9A0744652A83E72A9C461876AF4D7EF1A117' + // 032-063
+    '8da2b74eef1b6283e7e20166abcae538e9716e4669e2816b6b20c5c356802001' + // 064-095
+    'cc1403a9a117d12a2669f456366d6ebb0f1246f1265150f793cdb4b253e348ae' + // 096-127
+    '203d89bc025e802a7e0e00621d70aa36b7e07cb1e7d5b38d5e222b8b0e4b8407' + // 128-159
+    '0142b1e29504767d76824850320b5368129fdd74e861b498e3be8d16f2d7d169' + // 160-191
+    '57BE81F47B17D9AE7C4FF15429A73E10ACF250ED3A90A93C711308A74C6216A9' + // 192-223
+    'ED84CD126DA7F28E8ABF8BB63517E1CA98E712F4FB2E1A6AED9FDC73291FAA17' + // 224-255
+    '958211C4BA2EBD5838C635EDB81F513A91A294E194F1C039AEEC657DCE40AA7E' +
+    '7C0AF57CACEFA40C9F14B71A4B3456A63E162EC7D8D10B8FFB1810D71001B618'
 ));

@@ -8,6 +8,18 @@
 (function(){
 //////////////////////////////////////////////////////////////////////////////
 
+function toHEX(ab){
+    var ary = Uint8Array(ab);
+    var ret = '';
+    for(var i=0; i<ary.length; i++){
+        if(ary[i] < 16)
+            ret += '0' + (ary[i]).toString(16);
+        else
+            ret += (ary[i]).toString(16);
+    }
+    return ret;
+};
+
 function _Salsa20(rounds, testing){
     var self = this;
 
@@ -129,21 +141,17 @@ function _Salsa20(rounds, testing){
         if(32 == keyBuf.byteLength){
             var key = new Uint32Array(keyBuf);
             _salsa20BufferFillKey8(nonce, key);
-            blockGenerator = (function(){
-                return function(ret){
-                    _salsa20ExpansionKey8(ret);
-                    _counterInc();
-                };
-            })();
+            blockGenerator = function(ret){
+                _salsa20ExpansionKey8(ret);
+                _counterInc();
+            };
         } else if(16 == keyBuf.byteLength){
             var key = new Uint32Array(keyBuf);
             _salsa20BufferFillKey4(nonce, key);
-            blockGenerator = (function(){
-                return function(ret){
-                    _salsa20ExpansionKey4(ret);
-                    _counterInc();
-                };
-            })();
+            blockGenerator = function(ret){
+                _salsa20ExpansionKey4(ret);
+                _counterInc();
+            };
         } else
             throw new Error('invalid-key-length');
     };
@@ -158,7 +166,7 @@ function _Salsa20(rounds, testing){
         if(!isArrayBuffer(dataBuf)) throw new Error('invalid-input');
 
         var origLength = dataBuf.byteLength,
-            blocksCount = Math.ceil(origLength / 64),
+            blocksCount = Math.floor(origLength / 64) + 1,
             block = new Uint32Array(16);    // holder of new generated block
         var stream = new Uint8Array(dataBuf),
             xorStream = new Uint8Array(stream.length + 64);
