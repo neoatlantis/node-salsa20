@@ -48,9 +48,8 @@
 (function(){
 //////////////////////////////////////////////////////////////////////////////
 
-function _Salsa20(rounds){
+function _Salsa20(rounds, testing){
     var self = this;
-    if(!rounds || rounds < 10) rounds = 10;
 
     var coreFuncX = new Uint32Array(16);
     function coreFunc(ina, ret){
@@ -59,6 +58,7 @@ function _Salsa20(rounds){
         var i; //ret = new Uint32Array(16);
         var x = coreFuncX;
         for (i=0; i<16; i++) x[i] = ina[i];
+
         for (i=0; i<rounds; i++){
             x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
             x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
@@ -110,17 +110,17 @@ function _Salsa20(rounds){
         input[15] = sigma[3];
     };
 
-    function _salsa20ExpansionKey8(counter2, ret){
+    function _salsa20ExpansionKey8(ret){
         var input = _keyExpanBuffer;
 
-        input[8]  = counter2[0];
-        input[9]  = counter2[1];
+        input[8]  = counter[0];
+        input[9]  = counter[1];
 
         return coreFunc(input, ret);
     };
 
     /* key expansion for 4 words key(16 bytes) */
-    function _salsa20BufferFillKey8(nonce2, key4){
+    function _salsa20BufferFillKey4(nonce2, key4){
         var input = _keyExpanBuffer;
             tau = new Uint32Array(
                 [0x61707865, 0x3120646e, 0x79622d36, 0x6b206574]
@@ -144,16 +144,17 @@ function _Salsa20(rounds){
         input[15] = tau[3];
     };
 
-    function _salsa20ExpansionKey4(counter2, ret){
+    function _salsa20ExpansionKey4(ret){
         var input = _keyExpanBuffer;
 
-        input[8]  = counter2[0];
-        input[9]  = counter2[1];
+        input[8]  = counter[0];
+        input[9]  = counter[1];
 
         return coreFunc(input, ret);
     };
 
     //////////////////////////////////////////////////////////////////////
+
     var counter = new Uint32Array(2);
     var blockGenerator;
 
@@ -170,7 +171,7 @@ function _Salsa20(rounds){
             _salsa20BufferFillKey8(nonce, key);
             blockGenerator = (function(){
                 return function(ret){
-                    _salsa20ExpansionKey8(counter, ret);
+                    _salsa20ExpansionKey8(ret);
                     _counterInc();
                 };
             })();
@@ -179,7 +180,7 @@ function _Salsa20(rounds){
             _salsa20BufferFillKey4(nonce, key);
             blockGenerator = (function(){
                 return function(ret){
-                    _salsa20ExpansionKey4(counter, ret);
+                    _salsa20ExpansionKey4(ret);
                     _counterInc();
                 };
             })();
@@ -203,14 +204,13 @@ function _Salsa20(rounds){
             xorStream = new Uint8Array(stream.length + 64);
         var b=0, i, j;
 
-        _counterReset();
         for(i=0; i<blocksCount; i++){
             blockGenerator(block);
             for(j=0; j<16; j++){
-                xorStream[b++] = (block[j] >> 24) & 0xff;
-                xorStream[b++] = (block[j] >> 16) & 0xff;
+                xorStream[b++] = (block[j] >> 0) & 0xff;
                 xorStream[b++] = (block[j] >> 8) & 0xff;
-                xorStream[b++] = block[j] & 0xff;
+                xorStream[b++] = (block[j] >> 16) & 0xff;
+                xorStream[b++] = (block[j] >> 24) & 0xff;
             };
         };
 
@@ -236,6 +236,19 @@ function _Salsa20(rounds){
         self.decrypt = _xorBuf;
         delete self.key;
         return self;
+    };
+
+    this.seek = function(u32_0, u32_1){
+        counter[0] = u32_0;
+        counter[1] = u32_1;
+    };
+
+    if(true === testing){
+        this.core = function(inaBuf){
+            var ret = new Uint32Array(16);
+            coreFunc(new Uint32Array(inaBuf), ret);
+            return ret.buffer;
+        };
     };
 
 
