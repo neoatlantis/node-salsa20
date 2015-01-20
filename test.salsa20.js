@@ -32,6 +32,10 @@ function equalArrayBuffer(a, b){
 };
 
 function testExpansion(rounds, nonce, key, assertedStream){
+    nonce = toArrayBuffer(nonce);
+    key = toArrayBuffer(key);
+    assertedStream = toArrayBuffer(assertedStream);
+
     var nonceAry = new Uint8Array(nonce);
     var keyAry = new Uint8Array(key);
     var input = new Uint8Array(8 + keyAry.length);
@@ -132,4 +136,74 @@ runTest('Expansion generation with 128-bit key', testExpansion(
         134, 85,110,246,161,163, 43,235,231, 94,171, 51,145,214,112, 29,
         14,232, 5, 16,151,140,183,141,171, 9,122,181,104,182,177,193
     ]).buffer
+));
+
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.256>, Set 1 Vector #0', testExpansion(
+    10,
+    '0000000000000000',
+    '80000000000000000000000000000000' +
+    '00000000000000000000000000000000',
+    'E3BE8FDD8BECA2E3EA8EF9475B29A6E7003951E1097A5C38D23B7A5FAD9F6844' +
+    'B22C97559E2723C7CBBD3FE4FC8D9A0744652A83E72A9C461876AF4D7EF1A117'
+));
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.256>, Set 2 Vector #252', testExpansion(
+    10,
+    '0000000000000000',
+    'FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC' +
+    'FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC',
+    '356DD71DBC2B216B7A439E07BCC1348F769F7EF482486C92E8FD8EB050224838' +
+    'AB1F4DFCD2FB196AFD4C4FFBF51B91246BF45AE8131B8D5CAFA29FC3025A3597'
+));
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.256>, Set 6 Vector #0', testExpansion(
+    10,
+    '0D74DB42A91077DE',
+    '0053A6F94C9FF24598EB3E91E4378ADD' +
+    '3083D6297CCF2275C81B6EC11467BA0D',
+    'F5FAD53F79F9DF58C4AEA0D0ED9A9601F278112CA7180D565B420A48019670EA' +
+    'F24CE493A86263F677B46ACE1924773D2BB25571E1AA8593758FC382B1280B71'
+));
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.256>, Set 6 Vector #2', testExpansion(
+    10,
+    '1F86ED54BB2289F0',
+    '0A5DB00356A9FC4FA2F5489BEE4194E7' +
+    '3A8DE03386D92C7FD22578CB1E71C417',
+    '3FE85D5BB1960A82480B5E6F4E965A4460D7A54501664F7D60B54B06100A37FF' +
+    'DCF6BDE5CE3F4886BA77DD5B44E95644E40A8AC65801155DB90F02522B644023'
+));
+
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.128>, Set 1 Vector #0', testExpansion(
+    10,
+    '0000000000000000',
+    '80000000000000000000000000000000',
+    '4DFA5E481DA23EA09A31022050859936DA52FCEE218005164F267CB65F5CFD7F' +
+    '2B4F97E0FF16924A52DF269515110A07F9E460BC65EF95DA58F740B7D1DBB0AA'
+));
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.128>, Set 1 Vector #18', testExpansion(
+    10,
+    '0000000000000000',
+    '00002000000000000000000000000000',
+    'BACFE4145E6D4182EA4A0F59D4076C7E83FFD17E7540E5B7DE70EEDDF9552006' +
+    'B291B214A43E127EED1DA1540F33716D83C3AD7D711CD03251B78B2568F2C844'
+));
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.128>, Set 2 Vector #18', testExpansion(
+    10,
+    '0000000000000000',
+    '12121212121212121212121212121212',
+    '05835754A1333770BBA8262F8A84D0FD70ABF58CDB83A54172B0C07B6CCA5641' +
+    '060E3097D2B19F82E918CB697D0F347DC7DAE05C14355D09B61B47298FE89AEB'
+));
+
+runTest('More vectors from <https://github.com/alexwebr/salsa20/blob/master/test_vectors.128>, Set 6 Vector #2', testExpansion(
+    10,
+    '1F86ED54BB2289F0',
+    '0A5DB00356A9FC4FA2F5489BEE4194E7',
+    '8B354C8F8384D5591EA0FF23E7960472B494D04B2F787FC87B6569CB9021562F' +
+    'F5B1287A4D89FB316B69971E9B861A109CF9204572E3DE7EAB4991F4C7975427'
 ));
