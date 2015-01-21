@@ -56,8 +56,10 @@ function testExpansion(rounds, nonce, key, assertedStream){
 
     var cipher = new salsa20(rounds, true).key(input.buffer);
 
-    var counterAry = new Uint32Array(nonce.slice(8,16));
-    cipher.seek(counterAry[0], counterAry[1]);
+    if(nonce.byteLength > 8){
+        var counterAry = new Uint32Array(nonce.slice(8,16));
+        cipher.seek(counterAry[0], counterAry[1]);
+    };
 
     var streamBuf = toArrayBuffer(assertedStream);
     var ret = cipher.encrypt(toArrayBuffer(assertedStream));
@@ -233,6 +235,6 @@ runTest('Streams over more blocks, Set 1 Vector #0', testExpansion(
     '0142b1e29504767d76824850320b5368129fdd74e861b498e3be8d16f2d7d169' + // 160-191
     '57BE81F47B17D9AE7C4FF15429A73E10ACF250ED3A90A93C711308A74C6216A9' + // 192-223
     'ED84CD126DA7F28E8ABF8BB63517E1CA98E712F4FB2E1A6AED9FDC73291FAA17' + // 224-255
-    '958211C4BA2EBD5838C635EDB81F513A91A294E194F1C039AEEC657DCE40AA7E' +
-    '7C0AF57CACEFA40C9F14B71A4B3456A63E162EC7D8D10B8FFB1810D71001B618'
+    '958211C4BA2EBD5838C635EDB81F513A91A294E194F1C039AEEC657DCE40AA7E' + // 256-287
+    '7C0AF57CACEFA40C9F14B71A4B3456A63E162EC7D8D10B8FFB1810D71001B618'   // 288-319
 ));
