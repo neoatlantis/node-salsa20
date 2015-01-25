@@ -61,7 +61,6 @@ function testExpansion(rounds, nonce, key, assertedStream){
         cipher.seek(counterAry[0], counterAry[1]);
     };
 
-    var streamBuf = toArrayBuffer(assertedStream);
     var ret = cipher.encrypt(toArrayBuffer(assertedStream));
     return equalArrayBuffer(ret, new Uint8Array(ret.byteLength).buffer);
 };

@@ -25,9 +25,13 @@ var key = new Uint8Array([
     117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132,
 ]).buffer;
 
-var plaintextBlock = new Uint8Array(128).buffer;
 
 cipher.key(key);
 
-console.log(toHEX(cipher.encrypt(plaintextBlock)))
-//console.log(toHEX(cipher.encrypt(plaintextBlock)))
+var size = 1024 * 1024 * 1;
+var plaintextBlock = new Uint8Array(size).buffer;
+var begin = new Date().getTime();
+var f = cipher.encrypt(plaintextBlock);
+var end = new Date().getTime();
+
+console.log('Speed: ', size / ((end - begin) / 1000), 'bytes / second');
