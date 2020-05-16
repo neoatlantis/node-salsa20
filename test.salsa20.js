@@ -54,12 +54,11 @@ function testExpansion(rounds, nonce, key, assertedStream){
     for(var i=0; i<8; i++) input[i] = nonceAry[i];
     for(var i=0; i<keyAry.length; i++) input[i+8] = keyAry[i];
 
-    var cipher = new salsa20(rounds, true).key(input.buffer);
+//  Calling as below is deprecated. It works but will cause a warning.
+//    var cipher = new salsa20(rounds, true).key(input.buffer);
 
-    if(nonce.byteLength > 8){
-        var counterAry = new Uint32Array(nonce.slice(8,16));
-        cipher.seek(counterAry[0], counterAry[1]);
-    };
+//  This works. Key and nonce length is enforced and thus more verbosely.
+    var cipher = new salsa20({ doubleRounds: rounds, testing: true}).key(keyAry).nonce(nonceAry);
 
     var ret = cipher.encrypt(toArrayBuffer(assertedStream));
     return equalArrayBuffer(ret, new Uint8Array(ret.byteLength).buffer);
@@ -68,7 +67,7 @@ function testExpansion(rounds, nonce, key, assertedStream){
 function testCore(rounds, input, assertedOutput){
     var inputBuf = toArrayBuffer(input);
     var assertBuf = toArrayBuffer(assertedOutput)
-    var cipher = new salsa20(rounds, true);
+    var cipher = new salsa20({ doubleRounds: rounds, testing: true});
     var ret = cipher.core(inputBuf);
     return equalArrayBuffer(ret, assertBuf);
 };
