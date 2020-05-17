@@ -2,7 +2,7 @@
     "name": "node-salsa20",
     "author": "NeoAtlantis",
     "description": "pure javascript implemented salsa20 cipher",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "repository": {
         "type": "git",
         "url": "git://github.com/neoatlantis/node-salsa20.git"
