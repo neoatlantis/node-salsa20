@@ -1,10 +1,12 @@
-A Salsa20 implementation in pure JavaScript for NodeJS
-======================================================
+Salsa20 in pure JS for Node and Browser
+=======================================
 
-Designed by Daniel J. Bernstein, The Salsa20 is a stream cipher constructed
-with a hashing function. This file provides a pure JavaScript implemented
-Salsa20 encrypt/decryptor. Despite its name, the package currently works both
-with browser and node.js thanks `browserify`.
+Designed by Daniel J. Bernstein, Salsa20 is a stream cipher constructed with a
+hashing-alike function. This file provides a pure JavaScript implemented
+Salsa20 encrypt/decryptor.
+
+Despite its name, the package currently works both within browser and node.js
+thanks `browserify`.
 
 This library currently provides a `seek` function for setting counter values.
 It's possible to start stream encryption at any given counter state.
