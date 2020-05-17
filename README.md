@@ -3,21 +3,11 @@ A Salsa20 implementation in pure JavaScript for NodeJS
 
 Designed by Daniel J. Bernstein, The Salsa20 is a stream cipher constructed
 with a hashing function. This file provides a pure JavaScript implemented
-Salsa20 encrypt/decryptor.
+Salsa20 encrypt/decryptor. Despite its name, the package currently works both
+with browser and node.js thanks `browserify`.
 
 This library currently provides a `seek` function for setting counter values.
-But whether the seek function is compatible when cutting into the middle of
-the stream, is unknown(I've not tested this).
-
-If you decide to use this library, remember that this cipher takes your first
-8 bytes of the key as IV and the reset 32(128bit) or 64(256bit) bytes as the
-real encryption key. **Stream with such same IV and keys can NOT be safely used
-repeatedly!**
-
-This is the version 0.1.2 of this library with a few changes.I've dropped the
-use of the buffer in NodeJS. All inputs and outputs are ArrayBuffers. If you
-have encountered any incompatible issues, please have a look at `example.js`
-again.
+It's possible to start stream encryption at any given counter state.
 
 **WARNING**: This module is written by someone who have no rich experiences in
 programming with JavaScript. The algorithm is partially verified against the
@@ -27,41 +17,63 @@ been warned!
 
 _And also note, that this module is licensed under GPLv3._
 
-Known Issues
-------------
-0. Sorry for that, but this version may be not backwards compatible
-   (version 0.0.1), some serious errors occurred in the previous version.
-   This may be a big bad news for you if you've encrypted something with this
-   library :(
 
 Usage
 -----
-The `salsa20` is initialized with parameter of rounds(in the specification,
-this is 10. You can make it larger, e.g. 14, or 20, this may enhance the
-security, but will slow the speed).
 
-All other inputs, namely, the `key`, the `plaintext` or the `ciphertext`
-are ArrayBuffers. The processes are always blocking.
-
-The first 8 bytes of the key is taken as nonce, the rest following 16 or 32
-bytes are taken as real encryption key. Depending on whether it's 16 or
-32 bytes, according to the specification, there will be slightly internal
-differences in processing. But you can ignore this.
+`node-salsa20` is initialized with a parameter on desired double-rounds,
+default is 10. If denoted as Salsa20/**20**, there will be 20 rounds, or 10
+double-rounds used internally. This paramter is given during initialization:
 
 ```javascript
-var salsa20 = require('/PATH/TO/THIS/MODULE.js');
+const Salsa20 = require("node-salsa20");
 
-// encrypt:
-var encryptor = new salsa20(12).key(KEY); // 12 is the round number
-var CIPHERTEXT = encryptor.encrypt(PLAINTEXT);
+const encryptor1 = new Salsa20({ doubleRounds: 10 }); // or
+const encryptor2 = new Salsa20({ rounds: 20 });
 
-// decrypt:
-var decryptor = new salsa20(12).key(KEY); // 12 is the round number
-var DECRYPTED = decryptor.decrypt(CIPHERTEXT);
+// there are other reduced versions, for example:
+//   new Salsa20({ rounds: 12 }), effectively the same as 
+//   new Salsa20({ doubleRounds: 6 })
 ```
+
+Due to a limitation by using [the Salsa20 core function published on website](https://cr.yp.to/salsa20.html),
+which has 2 rounds in each loop, `node-salsa20` will not attempt to
+implement/accept rounds of odd number, e.g. Salsa20/5. This can be achieved if
+interests exist.
+
+To set up an instance, first call the `key` method and then `nonce`:
+
+```javascript
+encryptor1
+    .key(/* Uint8Array of length 16 or 32 bytes */)
+    .nonce(/* Uint8Array of length 8 or 16 bytes */)
+;
+```
+
+A standard nonce should be 8 bytes. If 16 bytes are provided, the latter 8
+bytes will be used for the internal 64-bit counter. It's therefore possible to
+specify a starting counter value in this way.
+
+It **MUST** be avoided to use the same (key, nonce) combination for any
+different messages!
+
+After key and nonce is set, one may use `encryptor.encrypt` or
+`encryptor.decrypt` to encrypt/decrypt data. Both methods are in fact the same,
+since Salsa20 uses XOR on data and pseudorandom byte stream.
+
+There's a method `encryptor.seek(u32_0, u32_1)` for setting/resetting the
+internal counter, which can be called anytime after set-up.
 
 You may also want to view the `example.js` for examples, and `test.salsa20.js`
 for a test under NodeJS against several test vectors.
+
+
+
+Known Issues
+------------
+0. Sorry for that, but version 0.0.1 has got some errors rendering it
+   incompatible with later versions. This may be a big bad news for you if
+   you've encrypted something with this library :(
 
 
 References

@@ -6,7 +6,7 @@ Core function of Salsa20
 
 */
 
-module.exports = function getNewCoreFunction(rounds){
+module.exports = function getNewCoreFunction(doubleRounds){
     
     const x = new Uint32Array(16);
     function coreFunc(ina, ret){
@@ -15,7 +15,7 @@ module.exports = function getNewCoreFunction(rounds){
         var i; //ret = new Uint32Array(16);
         for (i=0; i<16; i++) x[i] = ina[i];
 
-        for (i=0; i<rounds; i++){
+        for (i=0; i<doubleRounds; i++){
             x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
             x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
             x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
